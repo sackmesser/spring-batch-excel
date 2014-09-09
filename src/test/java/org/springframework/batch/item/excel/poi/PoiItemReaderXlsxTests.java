@@ -25,9 +25,10 @@ public class PoiItemReaderXlsxTests {
         this.itemReader.setResource(new ClassPathResource("/MAP-ICONS.xlsx"));
         this.itemReader.setRowMapper(new PassThroughRowMapper());
         this.itemReader.setSkippedRowsCallback(new RowCallbackHandler() {
-
             public void handleRow(final Sheet sheet, final String[] row) {
-                System.out.println("Skipping: " + row);
+                if (logger.isDebugEnabled()) {
+                    logger.debug("Skipping: " + StringUtils.arrayToCommaDelimitedString(row));
+                }
             }
         });
         this.itemReader.afterPropertiesSet();
@@ -44,7 +45,7 @@ public class PoiItemReaderXlsxTests {
         String[] row = null;
         do {
             row = (String[]) this.itemReader.read();
-            this.logger.debug("Read: "+ StringUtils.arrayToCommaDelimitedString(row));
+            this.logger.debug("Read: " + StringUtils.arrayToCommaDelimitedString(row));
         } while (row != null);
     }
 

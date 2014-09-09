@@ -43,7 +43,7 @@ public abstract class AbstractExcelItemReader<T> extends AbstractItemCountingIte
     protected final Log logger = LogFactory.getLog(getClass());
     private Resource resource;
     private int linesToSkip = 0;
-    private int currentRow = 0;
+    private int currentRow = -1;
     private int currentSheet = 0;
     private RowMapper<T> rowMapper;
     private RowCallbackHandler skippedRowsCallback;
@@ -70,7 +70,7 @@ public abstract class AbstractExcelItemReader<T> extends AbstractItemCountingIte
                 }
                 return null;
             } else {
-                this.currentRow = 0;
+                this.currentRow = -1;
                 this.openSheet();
                 return this.doRead();
             }
