@@ -67,23 +67,26 @@ public class PoiSheet implements Sheet {
         }
         final Row row = this.delegate.getRow(rowNumber);
         final List<String> cells = new LinkedList<String>();
-
-        final Iterator<Cell> cellIter = row.iterator();
-        while (cellIter.hasNext()) {
-            final Cell cell = cellIter.next();
-            switch (cell.getCellType()) {
-            case Cell.CELL_TYPE_NUMERIC:
-                cells.add(String.valueOf(cell.getNumericCellValue()));
-                break;
-            case Cell.CELL_TYPE_BOOLEAN:
-                cells.add(String.valueOf(cell.getBooleanCellValue()));
-                break;
-            case Cell.CELL_TYPE_STRING:
-            case Cell.CELL_TYPE_BLANK:
-                cells.add(cell.getStringCellValue());
-                break;
-            default:
-                throw new IllegalArgumentException("Cannot handle cells of type " + cell.getCellType());
+        for (int cn = 0; cn < row.getLastCellNum(); cn++) {
+            Cell cell = row.getCell(cn, Row.RETURN_BLANK_AS_NULL);
+            if (cell == null) {
+                // The spreadsheet is empty in this cell
+                cells.add("");
+            } else {
+                switch (cell.getCellType()) {
+                    case Cell.CELL_TYPE_NUMERIC:
+                        cells.add(String.valueOf(cell.getNumericCellValue()));
+                        break;
+                    case Cell.CELL_TYPE_BOOLEAN:
+                        cells.add(String.valueOf(cell.getBooleanCellValue()));
+                        break;
+                    case Cell.CELL_TYPE_STRING:
+                    case Cell.CELL_TYPE_BLANK:
+                        cells.add(cell.getStringCellValue());
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Cannot handle cells of type " + cell.getCellType());
+                }
             }
         }
         return cells.toArray(new String[cells.size()]);

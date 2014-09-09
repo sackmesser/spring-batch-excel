@@ -1,5 +1,6 @@
 package org.springframework.batch.item.excel.poi;
 
+import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.springframework.batch.item.excel.AbstractExcelItemReader;

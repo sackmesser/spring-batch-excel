@@ -18,7 +18,6 @@ public class PassThroughRowMapperTests {
     @Test
     public void mapRowShouldReturnSameValues() throws Exception {
         final String[] row = new String[] { "foo", "bar", "baz" };
-
         assertArrayEquals(row, this.rowMapper.mapRow(null, row, 0));
     }
 

@@ -26,9 +26,7 @@ public class PoiItemReaderXlsTests {
         this.itemReader.setRowMapper(new PassThroughRowMapper());
         this.itemReader.setSkippedRowsCallback(new RowCallbackHandler() {
             public void handleRow(final Sheet sheet, final String[] row) {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Skipping: " + StringUtils.arrayToCommaDelimitedString(row));
-                }
+                logger.debug("Skipping: " + StringUtils.arrayToCommaDelimitedString(row));
             }
         });
         this.itemReader.afterPropertiesSet();
@@ -42,10 +40,11 @@ public class PoiItemReaderXlsTests {
 
     @Test
     public void readExcelFile() throws Exception {
-        String[] row = null;
+        String[] row;
         do {
             row = (String[]) this.itemReader.read();
-            this.logger.debug("Read: " + StringUtils.arrayToCommaDelimitedString(row));
+            if (row != null)
+                this.logger.debug("Read: " + StringUtils.arrayToCommaDelimitedString(row));
         } while (row != null);
     }
 

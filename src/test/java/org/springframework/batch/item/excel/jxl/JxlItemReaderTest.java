@@ -30,9 +30,8 @@ public class JxlItemReaderTest {
         this.itemReader.setResource(new ClassPathResource("/MAP-ICONS.xls"));
         this.itemReader.setRowMapper(new PassThroughRowMapper());
         this.itemReader.setSkippedRowsCallback(new RowCallbackHandler() {
-
             public void handleRow(final Sheet sheet, final String[] row) {
-                System.out.println("Skipping: " + row);
+                logger.debug("Skipping: " + StringUtils.arrayToCommaDelimitedString(row));
             }
         });
         this.itemReader.afterPropertiesSet();
@@ -47,10 +46,11 @@ public class JxlItemReaderTest {
     @Test
     public void readExcelFile() throws Exception {
         assertEquals(5, this.itemReader.getNumberOfSheets());
-        String[] row = null;
+        String[] row;
         do {
             row = (String[]) this.itemReader.read();
-            this.logger.debug("Read: "+ StringUtils.arrayToCommaDelimitedString(row));
+            if (row != null)
+                this.logger.debug("Read: " + StringUtils.arrayToCommaDelimitedString(row));
         } while (row != null);
     }
 
