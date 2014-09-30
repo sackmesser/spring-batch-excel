@@ -50,6 +50,11 @@
             <version>${poi.version}</version>
             <optional>true</optional>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>1.12.4</version>
+        </dependency>
 
         <!-- Test Dependencies -->
         <dependency>
@@ -60,6 +65,7 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
         </dependency>
+
     </dependencies>
 
 </project>
