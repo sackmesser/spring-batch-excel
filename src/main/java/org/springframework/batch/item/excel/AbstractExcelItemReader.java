@@ -25,6 +25,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -62,6 +63,7 @@ public abstract class AbstractExcelItemReader<T> extends AbstractItemCountingIte
         }
         final Sheet sheet = this.getSheet(this.currentSheet);
         final String[] row = this.readRow(sheet);
+
         if (ObjectUtils.isEmpty(row)) {
             this.currentSheet++;
             if (this.currentSheet >= this.getNumberOfSheets()) {
@@ -82,6 +84,15 @@ public abstract class AbstractExcelItemReader<T> extends AbstractItemCountingIte
                         sheet.getName(), this.currentRow, row);
             }
         }
+    }
+
+    protected boolean isBlank(String[]row){
+        for (String item : row){
+            if(StringUtils.hasText(item)){
+                return false;
+            }
+        }
+        return true;
     }
 
     @Override
@@ -116,9 +127,17 @@ public abstract class AbstractExcelItemReader<T> extends AbstractItemCountingIte
 
     private String[] readRow(final Sheet sheet) {
         this.currentRow++;
+        logger.debug("Currently reading row [" + this.currentRow + "] of workbook ["+this.resource.getFilename()+"]");
         if (this.currentRow < sheet.getNumberOfRows()) {
-            return sheet.getRow(this.currentRow);
+            String[] row = sheet.getRow(this.currentRow);
+            // Skip blank rows
+            if(row != null && this.isBlank(row)){
+                logger.info("No data found on row [" + this.currentRow + "] of workbook ["+this.resource.getFilename()+"]");
+                return readRow(sheet);
+            }
+            return row;
         }
+
         return null;
     }
 
