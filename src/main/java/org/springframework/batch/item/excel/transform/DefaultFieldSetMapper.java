@@ -1,5 +1,6 @@
 package org.springframework.batch.item.excel.transform;
 
+import lombok.extern.log4j.Log4j;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
@@ -14,10 +15,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by fvalmeida on 9/9/14.
  */
+@Log4j
 public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
 
     final Class<T> typeParameterClass;
@@ -38,44 +42,25 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
         try {
             object = typeParameterClass.newInstance();
             final T finalObject = object;
-            ReflectionUtils.doWithFields(typeParameterClass,
-                    new ReflectionUtils.FieldCallback() {
-                        @Override
-                        public void doWith(final Field field) throws IllegalArgumentException,
-                                IllegalAccessException {
-                            for (String propertyName : fieldSet.getProperties().stringPropertyNames()) {
-                                if (propertyName.equalsIgnoreCase(field.getName())) {
-                                    System.out.println("Found field " + field + " in type "
-                                            + field.getDeclaringClass());
-                                    ReflectionUtils.makeAccessible(field);
-                                    try {
-                                        field.set(finalObject, getValue(field, propertyName, fieldSet));
-                                    } catch (IllegalArgumentException e) {
-                                        e.printStackTrace();
-                                    } catch (IllegalAccessException e) {
-                                        e.printStackTrace();
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                    }
-                                    break;
-                                }
-                            }
-                        }
-                    },
-                    new ReflectionUtils.FieldFilter() {
-                        @Override
-                        public boolean matches(final Field field) {
-                            final int modifiers = field.getModifiers();
-                            // no static fields please
-                            return !Modifier.isStatic(modifiers);
-                        }
-                    });
+            Field[] fields = object.getClass().getDeclaredFields();
+            Map<String, Field> fieldsOnClass = new HashMap<String, Field>();
 
-//            ReflectionUtils.findField(typeParameterClass, "lastName").set(object, fieldSet.readString("lastName"));
-//            ReflectionUtils.findField(typeParameterClass, "firstName").set(object, fieldSet.readString("firstName"));
-//            ReflectionUtils.findField(typeParameterClass, "position").set(object, fieldSet.readString("position"));
-//            ReflectionUtils.findField(typeParameterClass, "debutYear").set(object, fieldSet.readInt("debutYear"));
-//            ReflectionUtils.findField(typeParameterClass, "birthYear").set(object, fieldSet.readInt("birthYear"));
+            for(Field f : fields){
+                fieldsOnClass.put(f.getName(), f);
+                ReflectionUtils.makeAccessible(f);
+            }
+            for (String propertyName : fieldSet.getProperties().stringPropertyNames()) {
+                try {
+                    Field field = fieldsOnClass.get(propertyName);
+                    if(field == null) throw new NoSuchFieldException();
+                    field.set(finalObject, getValue(field, propertyName, fieldSet));
+                } catch (NoSuchFieldException e) {
+                    log.warn("Field [" + propertyName + "] not found on class [" + object.getClass() + "]");
+                    continue;
+                } catch (Exception e) {
+                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+                }
+            }
         } catch (InstantiationException e) {
             ReflectionUtils.handleReflectionException(e);
         } catch (IllegalAccessException e) {
