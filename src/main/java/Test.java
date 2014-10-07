@@ -1,18 +1,26 @@
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.springframework.ErrorMessage;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.excel.RowCallbackHandler;
 import org.springframework.batch.item.excel.Sheet;
 import org.springframework.batch.item.excel.mapping.DefaultRowMapper;
 import org.springframework.batch.item.excel.poi.PoiItemReader;
+import org.springframework.batch.item.excel.transform.DefaultFieldSetMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.util.StringUtils;
 
+import javax.persistence.Column;
 import java.io.Serializable;
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Created by fvalmeida on 9/9/14.
@@ -20,12 +28,12 @@ import java.io.Serializable;
 public class Test {
 
     public static void main(String[] args) throws Exception {
-
+        Date startTime = new Date();
         PoiItemReader<Player> itemReader = new PoiItemReader();
         itemReader.setLinesToSkip(1); //First line is column names
 //        itemReader.setResource(new ClassPathResource("/Player.xls"));
-        itemReader.setResource(new ClassPathResource("/Player.xlsx"));
-        DefaultRowMapper<Player> defaultRowMapper = new DefaultRowMapper(Player.class);
+        itemReader.setResource(new ClassPathResource("/Player.xls"));
+        DefaultRowMapper<Player> defaultRowMapper = new DefaultRowMapper();
 //        defaultRowMapper.setFieldSetMapper(new PlayerMapper());
         BeanWrapperFieldSetMapper mapper = new BeanWrapperFieldSetMapper();
         mapper.setTargetType(Player.class);
@@ -42,19 +50,36 @@ public class Test {
         });
         itemReader.afterPropertiesSet();
         itemReader.open(new ExecutionContext());
-        Player row;
+
+        Player row = null;
+        List<Player> list = new ArrayList<Player>();
+        List<ErrorMessage> errors = new ArrayList<ErrorMessage>();
+        row = new Player(); // avoid problems when there's an error on the first line
         do {
-            row = itemReader.read();
-            if (row != null)
-                System.out.println("Read: " + row.toString());
+            try{
+                row = itemReader.read();
+                if (row != null){
+                    System.out.println("Read: " + row.toString());
+                    list.add(row);
+                }
+            }catch(RuntimeException e){
+                errors.add(new ErrorMessage(e.getCause().getMessage(), itemReader.getCurrentRowIndex()+ 1));
+            }
         } while (row != null);
+        for (ErrorMessage e : errors){
+            System.out.println(e.toString());
+        }
+        System.out.println("Total of players read: " + list.size());
+        Date finalTime = new Date();
+        Long time = finalTime.getTime() - startTime.getTime();
+        System.out.println("Time executing file: " + time + "ms");
     }
 
     @Setter
     @Getter
     @ToString
     public static class Player implements Serializable {
-
+        @Column(nullable = false)
         private String id;
         //private String asdf;
         private String lastName;
@@ -62,6 +87,10 @@ public class Test {
         private String position;
         private int birthYear;
         private int debutYear;
+        @DateTimeFormat(pattern = "MM-dd-yyyy")
+        private Date birthDate;
+        @DateTimeFormat
+        private Timestamp anotherDate;
 
     }
 

@@ -9,14 +9,14 @@ import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.validation.BindException;
 
+import javax.persistence.Column;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Modifier;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
 
 /**
  * Created by fvalmeida on 9/9/14.
@@ -27,8 +27,16 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
     final Class<T> typeParameterClass;
     private static String DEFAULT_DATE_PATTERN = "yyyy/MM/dd hh:mm:ss aa";
 
+    private Map<String, Field> classFields = new HashMap<String, Field>();;
+
     public DefaultFieldSetMapper(Class<T> typeParameterClass) {
         this.typeParameterClass = typeParameterClass;
+        // Get the fields of given class and add to map for faster access
+        Field[] fields = this.typeParameterClass.getDeclaredFields();
+        for(Field f : fields){
+            classFields.put(f.getName(), f);
+            ReflectionUtils.makeAccessible(f);
+        }
     }
 
     @Override
@@ -42,23 +50,25 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
         try {
             object = typeParameterClass.newInstance();
             final T finalObject = object;
-            Field[] fields = object.getClass().getDeclaredFields();
-            Map<String, Field> fieldsOnClass = new HashMap<String, Field>();
 
-            for(Field f : fields){
-                fieldsOnClass.put(f.getName(), f);
-                ReflectionUtils.makeAccessible(f);
-            }
             for (String propertyName : fieldSet.getProperties().stringPropertyNames()) {
+                String value = fieldSet.readString(propertyName);
                 try {
-                    Field field = fieldsOnClass.get(propertyName);
+                    Field field = classFields.get(propertyName);
                     if(field == null) throw new NoSuchFieldException();
-                    field.set(finalObject, getValue(field, propertyName, fieldSet));
+                    checkNotNullableField(value, field);
+                    try{
+                        field.set(finalObject, getValue(field, propertyName, fieldSet));
+                    }catch (NumberFormatException e){
+                        throw new RuntimeException("Unparseable " + field.getType() + ": \"" + value + "\", name: " + propertyName);
+                    }catch(IllegalArgumentException e){
+                        throw new RuntimeException(e.getMessage());
+                    }catch(Exception e){
+                        e.printStackTrace();
+                    }
                 } catch (NoSuchFieldException e) {
                     log.warn("Field [" + propertyName + "] not found on class [" + object.getClass() + "]");
                     continue;
-                } catch (Exception e) {
-                    e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
                 }
             }
         } catch (InstantiationException e) {
@@ -68,6 +78,13 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
         }
 
         return object;
+    }
+
+    private void checkNotNullableField(String value, Field field){
+        Column columnAnnotation = field.getAnnotation(Column.class);
+        if(columnAnnotation!= null && !columnAnnotation.nullable() && !StringUtils.hasText(value)){
+            throw new RuntimeException("Field " + field.getName() + " cannot be empty.");
+        }
     }
     /**
         Create the object for a given property.

@@ -224,4 +224,12 @@ public abstract class AbstractExcelItemReader<T> extends AbstractItemCountingIte
     public void setSkippedRowsCallback(final RowCallbackHandler skippedRowsCallback) {
         this.skippedRowsCallback = skippedRowsCallback;
     }
+
+    /**
+     * Get the index for the last processed row in Excel file
+     * @return The last processed row
+     */
+    public int getCurrentRowIndex(){
+        return currentRow;
+    }
 }
