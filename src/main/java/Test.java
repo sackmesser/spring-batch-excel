@@ -1,13 +1,9 @@
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import org.springframework.ErrorMessage;
+import lombok.*;
 import org.springframework.batch.item.ExecutionContext;
 import org.springframework.batch.item.excel.RowCallbackHandler;
 import org.springframework.batch.item.excel.Sheet;
 import org.springframework.batch.item.excel.mapping.DefaultRowMapper;
 import org.springframework.batch.item.excel.poi.PoiItemReader;
-import org.springframework.batch.item.excel.transform.DefaultFieldSetMapper;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
 import org.springframework.batch.item.file.mapping.FieldSetMapper;
 import org.springframework.batch.item.file.transform.FieldSet;
@@ -92,6 +88,16 @@ public class Test {
         @DateTimeFormat
         private Timestamp anotherDate;
 
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    @AllArgsConstructor
+    @NoArgsConstructor
+    public static class ErrorMessage {
+        private String message;
+        private int row;
     }
 
     public static class PlayerMapper implements FieldSetMapper<Player> {
