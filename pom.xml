@@ -6,7 +6,7 @@
     <artifactId>spring-batch-excel</artifactId>
     <version>1.3.0-SNAPSHOT</version>
     <packaging>jar</packaging>
-    <name>Excel</name>
+    <name>spring-batch-excel</name>
 
     <parent>
         <groupId>org.springframework.batch</groupId>
@@ -18,6 +18,8 @@
         <spring.batch.version>2.2.2.RELEASE</spring.batch.version>
         <jxl.version>2.6.12</jxl.version>
         <poi.version>3.9</poi.version>
+        <!-- github server corresponds to entry in ~/.m2/settings.xml -->
+        <github.global.server>github</github.global.server>
     </properties>
 
     <dependencies>
@@ -72,5 +74,51 @@
         </dependency>
 
     </dependencies>
+
+    <distributionManagement>
+        <repository>
+            <id>internal.repo</id>
+            <name>Temporary Staging Repository</name>
+            <url>file://${project.build.directory}/mvn-repo</url>
+        </repository>
+    </distributionManagement>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-deploy-plugin</artifactId>
+                <version>2.8.1</version>
+                <configuration>
+                    <altDeploymentRepository>internal.repo::default::file://${project.build.directory}/mvn-repo</altDeploymentRepository>
+                </configuration>
+            </plugin>
+
+            <plugin>
+            <groupId>com.github.github</groupId>
+            <artifactId>site-maven-plugin</artifactId>
+            <version>0.11-SNAPSHOT</version>
+            <configuration>
+                <message>Maven artifacts for ${project.version}</message>               <!-- git commit message -->
+                <noJekyll>true</noJekyll>                                               <!-- disable webpage processing -->
+                <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>  <!-- matches distribution management repository url above -->
+                <branch>refs/heads/mvn-repo</branch>                                    <!-- remote branch name -->
+                <includes><include>**/*</include></includes>
+                <merge>true</merge>                                                     <!-- don't delete old artifacts -->
+                <dryRun>true</dryRun>                                                   <!-- Log what blobs, tree, and commits would be created without actually creating them -->
+                <repositoryName>spring-batch-excel</repositoryName>                     <!-- github repo name -->
+                <repositoryOwner>sackmesser</repositoryOwner>                           <!-- github username  -->
+            </configuration>
+            <executions>
+                <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
+                <execution>
+                    <goals>
+                        <goal>site</goal>
+                    </goals>
+                    <phase>deploy</phase>
+                </execution>
+            </executions>
+        </plugin>
+        </plugins>
+    </build>
 
 </project>
