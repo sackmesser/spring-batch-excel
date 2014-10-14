@@ -25,15 +25,23 @@ import java.util.Map;
 public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
 
     final Class<T> typeParameterClass;
-    private static String DEFAULT_DATE_PATTERN = "yyyy/MM/dd hh:mm:ss aa";
 
-    private Map<String, Field> classFields = new HashMap<String, Field>();;
+    private static String[] DEFAULT_DATE_PATTERNS = {
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd' 'HH:mm:ss.SSS",
+            "yyyy-MM-dd' 'HH:mm:ss",
+            "yyyy/MM/dd hh:mm:ss aa",
+            "yyyy-MM-dd"
+    };
+
+    private Map<String, Field> classFields = new HashMap<String, Field>();
 
     public DefaultFieldSetMapper(Class<T> typeParameterClass) {
         this.typeParameterClass = typeParameterClass;
         // Get the fields of given class and add to map for faster access
         Field[] fields = this.typeParameterClass.getDeclaredFields();
-        for(Field f : fields){
+        for (Field f : fields) {
             classFields.put(f.getName(), f);
             ReflectionUtils.makeAccessible(f);
         }
@@ -55,15 +63,15 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
                 String value = fieldSet.readString(propertyName);
                 try {
                     Field field = classFields.get(propertyName);
-                    if(field == null) throw new NoSuchFieldException();
+                    if (field == null) throw new NoSuchFieldException();
                     checkNotNullableField(value, field);
-                    try{
+                    try {
                         field.set(finalObject, getValue(field, propertyName, fieldSet));
-                    }catch (NumberFormatException e){
+                    } catch (NumberFormatException e) {
                         throw new RuntimeException("Unparseable " + field.getType() + ": \"" + value + "\", name: " + propertyName);
-                    }catch(IllegalArgumentException e){
+                    } catch (IllegalArgumentException e) {
                         throw new RuntimeException(e.getMessage());
-                    }catch(Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace();
                     }
                 } catch (NoSuchFieldException e) {
@@ -80,33 +88,33 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
         return object;
     }
 
-    private void checkNotNullableField(String value, Field field){
+    private void checkNotNullableField(String value, Field field) {
         Column columnAnnotation = field.getAnnotation(Column.class);
-        if(columnAnnotation!= null && !columnAnnotation.nullable() && !StringUtils.hasText(value)){
+        if (columnAnnotation != null && !columnAnnotation.nullable() && !StringUtils.hasText(value)) {
             throw new RuntimeException("Field " + field.getName() + " cannot be empty.");
         }
     }
+
     /**
-        Create the object for a given property.
-        This method gets dynamically the field type for a given property,
-            reads the property related to this on the FieldSet and return.
-        
-        Date columns may come by two ways :
-              #1: A Long value for date, if Excel cell is set to date.
-              #2: A String representing the date in a format if Excel
-                      cell is set to text.
-
-        java.util.Date is the default date type and annotation is
-          not needed (only if the pattern for String value is not the default).
-
-        Other than java.util.Date must have the
-          org.springframework.format.annotation.DateTimeFormat annotation.
-
-        Other date type must have a constructor receiving milliseconds time.
-
-        For this version, only the pattern attribute will be read from
-          org.springframework.format.annotation.DateTimeFormat annotation.
-
+     * Create the object for a given property.
+     * This method gets dynamically the field type for a given property,
+     * reads the property related to this on the FieldSet and return.
+     * <p/>
+     * Date columns may come by two ways :
+     * #1: A Long value for date, if Excel cell is set to date.
+     * #2: A String representing the date in a format if Excel
+     * cell is set to text.
+     * <p/>
+     * java.util.Date is the default date type and annotation is
+     * not needed (only if the pattern for String value is not the default).
+     * <p/>
+     * Other than java.util.Date must have the
+     * org.springframework.format.annotation.DateTimeFormat annotation.
+     * <p/>
+     * Other date type must have a constructor receiving milliseconds time.
+     * <p/>
+     * For this version, only the pattern attribute will be read from
+     * org.springframework.format.annotation.DateTimeFormat annotation.
      */
     private static Object getValue(Field field, String propertyName, FieldSet fieldSet) throws Exception {
         Class<?> fieldType = field.getType();
@@ -138,11 +146,11 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
             return fieldSet.readBigDecimal(propertyName);
         }
 
-        if(Date.class == fieldType){
+        if (Date.class == fieldType) {
             return createDateObject(Date.class, field, propertyName, fieldSet);
         }
 
-        if(field.getAnnotation(DateTimeFormat.class)!= null){
+        if (field.getAnnotation(DateTimeFormat.class) != null) {
             return createDateObject(fieldType, field, propertyName, fieldSet);
         }
         throw new Exception(String.format("Error getting value for:" +
@@ -151,35 +159,35 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
                 "", field.getName(), propertyName));
     }
 
-    private static <E extends Object> E createDateObject(Class<E> clazz, Field field, String propertyName, FieldSet fieldSet){
+    private static <E extends Object> E createDateObject(Class<E> clazz, Field field, String propertyName, FieldSet fieldSet) {
         // Try reading Long Value
-        try{
+        try {
             String msString = fieldSet.readString(propertyName);
-            if(!StringUtils.hasText(msString))
+            if (!StringUtils.hasText(msString))
                 return null;
             // remove the dot
             int dotIndex = msString.indexOf(".");
-            if(dotIndex > 0)
+            if (dotIndex > 0)
                 msString = msString.substring(0, dotIndex);
             Long milliseconds = Long.parseLong(msString);
             // convert date using POI DateUtil class because Date type in Excel starts from 1900 instead 1970
             Date javaDate = DateUtil.getJavaDate(milliseconds);
             return instantiateDateFromMilliseconds(clazz, javaDate.getTime());
-        }catch(NumberFormatException e){
+        } catch (NumberFormatException e) {
             // Find annotation to get the pattern
             DateTimeFormat dpAnnotation = field.getAnnotation(DateTimeFormat.class);
-            String pattern = DEFAULT_DATE_PATTERN;
+            String[] patterns = DEFAULT_DATE_PATTERNS;
             // TODO read all properties from the DateTimeFormat annotation
-            if((dpAnnotation != null) && !(dpAnnotation.pattern().isEmpty())){
-                pattern = dpAnnotation.pattern();
+            if ((dpAnnotation != null) && !(dpAnnotation.pattern().isEmpty())) {
+                patterns = new String[]{dpAnnotation.pattern()};
             }
             // Get the Date from field set using the pattern
-            Date javaDate = fieldSet.readDate(propertyName, pattern);
+            Date javaDate = readDate(fieldSet, propertyName, patterns);
             return instantiateDateFromMilliseconds(clazz, javaDate.getTime());
         }
     }
 
-    private static  <E extends Object> E instantiateDateFromMilliseconds(Class<E> clazz, Long milliseconds){
+    private static <E extends Object> E instantiateDateFromMilliseconds(Class<E> clazz, Long milliseconds) {
         try {
             Constructor<E> constructor = clazz.getConstructor(long.class);
             return constructor.newInstance(milliseconds);
@@ -189,6 +197,17 @@ public class DefaultFieldSetMapper<T> implements FieldSetMapper<T> {
                     "Check if the DateTimeFormat annotation is in a date type object.", clazz));
         }
 
+    }
+
+    private static Date readDate(FieldSet fieldSet, String propertyName, String... parsePatterns) {
+        for (String pattern : parsePatterns) {
+            try {
+                return fieldSet.readDate(propertyName, pattern);
+            } catch (IllegalArgumentException e) {
+                //intentionally empty
+            }
+        }
+        throw new IllegalArgumentException("Invalid input for date. Given '" + propertyName + "', expecting format " + StringUtils.arrayToCommaDelimitedString(parsePatterns) + ".");
     }
 
 }
