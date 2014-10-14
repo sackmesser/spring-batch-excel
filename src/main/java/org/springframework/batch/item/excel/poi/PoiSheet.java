@@ -66,6 +66,9 @@ public class PoiSheet implements Sheet {
             return null;
         }
         final Row row = this.delegate.getRow(rowNumber);
+        if(row == null){
+            return null;
+        }
         final List<String> cells = new LinkedList<String>();
         for (int cn = 0; cn < row.getLastCellNum(); cn++) {
             Cell cell = row.getCell(cn, Row.RETURN_BLANK_AS_NULL);
