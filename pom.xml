@@ -15,6 +15,12 @@
             <url>https://github.com/fvalmeida</url>
             <id>fvalmeida</id>
         </developer>
+        <developer>
+            <email>di_scruz@hotmail.com</email>
+            <name>Diogo Soares da Cruz Silva</name>
+            <url>https://github.com/discruz</url>
+            <id>discruz</id>
+        </developer>
     </developers>
 
     <parent>
