@@ -8,6 +8,15 @@
     <packaging>jar</packaging>
     <name>spring-batch-excel</name>
 
+    <developers>
+        <developer>
+            <email>fvalmeida@gmail.com</email>
+            <name>Felipe Vieira Almeida</name>
+            <url>https://github.com/fvalmeida</url>
+            <id>fvalmeida</id>
+        </developer>
+    </developers>
+
     <parent>
         <groupId>org.springframework.batch</groupId>
         <artifactId>spring-batch-parent</artifactId>
@@ -96,7 +105,7 @@
             <plugin>
             <groupId>com.github.github</groupId>
             <artifactId>site-maven-plugin</artifactId>
-            <version>0.11-SNAPSHOT</version>
+            <version>0.10</version>
             <configuration>
                 <message>Maven artifacts for ${project.version}</message>               <!-- git commit message -->
                 <noJekyll>true</noJekyll>                                               <!-- disable webpage processing -->
@@ -104,7 +113,6 @@
                 <branch>refs/heads/mvn-repo</branch>                                    <!-- remote branch name -->
                 <includes><include>**/*</include></includes>
                 <merge>true</merge>                                                     <!-- don't delete old artifacts -->
-                <dryRun>true</dryRun>                                                   <!-- Log what blobs, tree, and commits would be created without actually creating them -->
                 <repositoryName>spring-batch-excel</repositoryName>                     <!-- github repo name -->
                 <repositoryOwner>sackmesser</repositoryOwner>                           <!-- github username  -->
             </configuration>
