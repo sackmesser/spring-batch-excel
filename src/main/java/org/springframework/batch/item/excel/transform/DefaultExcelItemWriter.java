@@ -5,19 +5,22 @@ import lombok.Setter;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
-import org.apache.poi.xssf.usermodel.XSSFCell;
-import org.apache.poi.xssf.usermodel.XSSFRow;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.springframework.batch.item.ExecutionContext;
+import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemWriter;
+import org.springframework.batch.item.file.FlatFileItemWriter;
+import org.springframework.batch.item.file.ResourceAwareItemWriterItemStream;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.WritableResource;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+import sun.net.www.protocol.file.FileURLConnection;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.text.DateFormat;
@@ -34,7 +37,7 @@ import java.util.Map;
  * Time: 16:50
  */
 
-public class DefaultExcelItemWriter<T> implements ItemWriter<T>{
+public class DefaultExcelItemWriter<T> implements ResourceAwareItemWriterItemStream<T> {
 
     public static final short BORDER_THICK = 1;
     public static final short FONT_SIZE = 12;
@@ -42,9 +45,9 @@ public class DefaultExcelItemWriter<T> implements ItemWriter<T>{
     public static final String OUTPUT_EXTENSION_XLS = "xls";
     public static final String OUTPUT_EXTENSION_XLSX = "xlsx";
 
-    @Getter
-    @Setter
-    private String directory;
+
+    private WritableResource resource;
+    private OutputStream outputStream;
 
     @Getter
     @Setter
@@ -52,8 +55,9 @@ public class DefaultExcelItemWriter<T> implements ItemWriter<T>{
 
     @Override
     public void write(List<? extends T> items) throws Exception {
-        FileOutputStream outputStream = null;
         try{
+            Assert.notNull(resource, "Set the resource for the writer before write");
+            outputStream = resource.getOutputStream();
             Workbook workbook;
             if (outputExtension == OUTPUT_EXTENSION_XLSX) {
                 workbook = new XSSFWorkbook();
@@ -82,24 +86,11 @@ public class DefaultExcelItemWriter<T> implements ItemWriter<T>{
                     sheet.autoSizeColumn(i);
                 }
 
-                outputStream = new FileOutputStream(new File(directory + getFileName() + "."+ outputExtension));
                 workbook.write(outputStream);
             }
         }finally{
             outputStream.close();
         }
-    }
-
-    /**
-     * Get the file name for current file. This method can be overwrited.
-     * Returned string cannot have the extension on it.
-     * The default file name will be excelExport_MMddyyy_hhmmssSSS
-     * @return the file name
-     */
-    public String getFileName(){
-        SimpleDateFormat formatter = new SimpleDateFormat("MMddyyyy_hhmmssSSS");
-        String fileName = "excelExport_" + formatter.format(new Date());
-        return fileName;
     }
 
     /**
@@ -250,5 +241,29 @@ public class DefaultExcelItemWriter<T> implements ItemWriter<T>{
         style.setBorderRight(BORDER_THICK);
         style.setBorderTop(BORDER_THICK);
         return style;
+    }
+
+    @Override
+    public void setResource(Resource resource) {
+        if(resource instanceof WritableResource){
+            this.resource = (WritableResource)resource;
+            return;
+        }
+        throw new RuntimeException("Resource must implement the WritableResource interface");
+    }
+
+    @Override
+    public void open(ExecutionContext executionContext) throws ItemStreamException {
+        return;
+    }
+
+    @Override
+    public void update(ExecutionContext executionContext) throws ItemStreamException {
+       return;
+    }
+
+    @Override
+    public void close() throws ItemStreamException {
+        return;
     }
 }
