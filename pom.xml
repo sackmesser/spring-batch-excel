@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <artifactId>spring-batch-excel</artifactId>
-    <version>1.3.0-SNAPSHOT</version>
+    <version>1.3.1</version>
     <packaging>jar</packaging>
     <name>spring-batch-excel</name>
 
@@ -53,19 +53,16 @@
             <artifactId>jxl</artifactId>
             <version>${jxl.version}</version>
             <scope>compile</scope>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi</artifactId>
             <version>${poi.version}</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -113,14 +110,14 @@
             <artifactId>site-maven-plugin</artifactId>
             <version>0.10</version>
             <configuration>
-                <message>Maven artifacts for ${project.version}</message>               <!-- git commit message -->
-                <noJekyll>true</noJekyll>                                               <!-- disable webpage processing -->
-                <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>  <!-- matches distribution management repository url above -->
-                <branch>refs/heads/mvn-repo</branch>                                    <!-- remote branch name -->
+                <message>Maven artifacts for ${project.name} : ${project.version}</message>     <!-- git commit message -->
+                <noJekyll>true</noJekyll>                                                       <!-- disable webpage processing -->
+                <outputDirectory>${project.build.directory}/mvn-repo</outputDirectory>          <!-- matches distribution management repository url above -->
+                <branch>refs/heads/master</branch>                                              <!-- remote branch name -->
                 <includes><include>**/*</include></includes>
-                <merge>true</merge>                                                     <!-- don't delete old artifacts -->
-                <repositoryName>spring-batch-excel</repositoryName>                     <!-- github repo name -->
-                <repositoryOwner>sackmesser</repositoryOwner>                           <!-- github username  -->
+                <merge>true</merge>                                                             <!-- don't delete old artifacts -->
+                <repositoryName>mvn-repo</repositoryName>                                       <!-- github repo name -->
+                <repositoryOwner>sackmesser</repositoryOwner>                                   <!-- github username  -->
             </configuration>
             <executions>
                 <!-- run site-maven-plugin's 'site' target as part of the build's normal 'deploy' phase -->
