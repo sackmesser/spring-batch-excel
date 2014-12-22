@@ -18,7 +18,7 @@ import org.springframework.core.io.Resource;
  */
 public class PoiItemReader<T> extends AbstractExcelItemReader<T> {
 
-    private Workbook workbook;
+    protected Workbook workbook;
 
     @Override
     protected Sheet getSheet(final int sheet) {

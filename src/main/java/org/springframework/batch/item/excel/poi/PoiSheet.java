@@ -39,7 +39,7 @@ public class PoiSheet implements Sheet {
      * 
      * @param delegate the apache POI sheet
      */
-    PoiSheet(final org.apache.poi.ss.usermodel.Sheet delegate) {
+    public PoiSheet(final org.apache.poi.ss.usermodel.Sheet delegate) {
         super();
         this.delegate = delegate;
     }
