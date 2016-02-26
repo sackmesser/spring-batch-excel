@@ -16,19 +16,20 @@
 
 package org.springframework.batch.item.excel.poi;
 
-import org.springframework.batch.item.excel.Sheet;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.util.CellReference;
+import org.springframework.batch.item.excel.Sheet;
 
-import java.util.Iterator;
+import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * Sheet implementation for Apache POI.
- * 
- * @author Marten Deinum
  *
+ * @author Marten Deinum
  */
 public class PoiSheet implements Sheet {
 
@@ -36,7 +37,7 @@ public class PoiSheet implements Sheet {
 
     /**
      * Constructor which takes the delegate sheet.
-     * 
+     *
      * @param delegate the apache POI sheet
      */
     public PoiSheet(final org.apache.poi.ss.usermodel.Sheet delegate) {
@@ -66,19 +67,20 @@ public class PoiSheet implements Sheet {
             return null;
         }
         final Row row = this.delegate.getRow(rowNumber);
-        if(row == null){
+        if (row == null) {
             return null;
         }
         final List<String> cells = new LinkedList<String>();
         for (int cn = 0; cn < row.getLastCellNum(); cn++) {
             Cell cell = row.getCell(cn, Row.RETURN_BLANK_AS_NULL);
+
             if (cell == null) {
                 // The spreadsheet is empty in this cell
                 cells.add("");
             } else {
                 switch (cell.getCellType()) {
                     case Cell.CELL_TYPE_NUMERIC:
-                        cells.add(String.valueOf(cell.getNumericCellValue()));
+                        cells.add(String.valueOf(new BigDecimal(cell.getNumericCellValue())));
                         break;
                     case Cell.CELL_TYPE_BOOLEAN:
                         cells.add(String.valueOf(cell.getBooleanCellValue()));
